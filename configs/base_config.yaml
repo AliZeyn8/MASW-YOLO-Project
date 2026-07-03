@@ -41,3 +41,6 @@ mixup: 0.0
 
 # Model
 model: yolov8n.yaml  # base model configuration
+project: runs/train                              # <-- اضافه شد: پوشه‌ای که نتایج در آن ذخیره می‌شود
+exist_ok: true                                   # <-- اضافه شد: اگر پوشه تکراری بود بازنویسی کن
+verbose: true 
