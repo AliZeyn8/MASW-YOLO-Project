@@ -1,0 +1,43 @@
+# Base Configuration for MASW-YOLO Training
+# Default hyperparameters based on the MASW-YOLO paper.
+
+# Training
+epochs: 100
+batch: 16
+imgsz: 640
+workers: 8
+device: 0  # GPU device ID(s)
+
+# Optimizer
+optimizer: SGD
+lr0: 0.01
+lrf: 0.01  # final learning rate factor
+momentum: 0.937
+weight_decay: 0.0005
+
+# Learning rate scheduler
+warmup_epochs: 3.0
+warmup_momentum: 0.8
+warmup_bias_lr: 0.1
+
+# Loss
+box: 7.5       # box loss gain
+cls: 0.5       # cls loss gain
+dfl: 1.5       # dfl loss gain
+
+# Data augmentation
+hsv_h: 0.015
+hsv_s: 0.7
+hsv_v: 0.4
+degrees: 0.0
+translate: 0.1
+scale: 0.5
+shear: 0.0
+perspective: 0.0
+flipud: 0.0
+fliplr: 0.5
+mosaic: 1.0
+mixup: 0.0
+
+# Model
+model: yolov8n.yaml  # base model configuration
