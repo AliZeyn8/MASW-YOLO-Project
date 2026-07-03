@@ -1,0 +1,3 @@
+name: masw_yolo_msca_only
+model_yaml: src/models/masw-yolo-msca.yaml
+weights: yolov8n.pt
