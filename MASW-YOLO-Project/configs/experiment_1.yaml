@@ -1,0 +1,15 @@
+# Experiment 1 Configuration
+# Overrides base_config.yaml for a specific experiment run.
+
+inherit: base_config.yaml
+
+# Experiment-specific settings
+epochs: 150
+batch: 16
+imgsz: 640
+
+# Notes:
+# - Using MSCA module in backbone
+# - Using AFPN as neck replacement
+# - Wise-IoU for bounding box regression
+# - Soft-NMS for post-processing
