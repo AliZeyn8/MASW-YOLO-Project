@@ -1,3 +1,8 @@
-name: exp2_msca_afpn
+# configs/exp2_afpn.yaml
+#
+# مرحله ۱: فقط AFPN روی baseline، بدون MSCA.
+# نتیجه با exp0_baseline.yaml مقایسه می‌شود.
+
+name: exp2_afpn_only
 model_yaml: src/models/masw-yolo-afpn-only.yaml
 weights: yolov8n.pt
