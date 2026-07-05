@@ -42,21 +42,22 @@ def main():
         print(f"مدل مستقیم از وزن‌های آماده بارگذاری شد: {cfg['weights']}")
 
     results = model.train(
-        data=cfg['data'],
-        epochs=cfg['epochs'],
-        batch=cfg['batch'],
-        imgsz=cfg['imgsz'],
-        lr0=cfg['lr0'],
-        lrf=cfg['lrf'],
-        momentum=cfg['momentum'],
-        weight_decay=cfg['weight_decay'],
-        device=cfg['device'],
-        workers=cfg['workers'],
-        project=cfg['project'],
-        name=cfg['name'],
-        exist_ok=cfg['exist_ok'],
-        verbose=cfg['verbose'],
-    )
+    data=cfg['data'],
+    epochs=cfg['epochs'],
+    batch=cfg['batch'],
+    imgsz=cfg['imgsz'],
+    lr0=cfg['lr0'],
+    lrf=cfg['lrf'],
+    momentum=cfg['momentum'],
+    weight_decay=cfg['weight_decay'],
+    optimizer=cfg.get('optimizer', 'SGD'),   # <--- این خط را اضافه کنید
+    device=cfg['device'],
+    workers=cfg['workers'],
+    project=cfg['project'],
+    name=cfg['name'],
+    exist_ok=cfg['exist_ok'],
+    verbose=cfg['verbose'],
+)
 
     print(f"✅ آموزش '{cfg['name']}' با موفقیت به پایان رسید!")
     print(f"وزن‌های نهایی: {results.save_dir}/weights/best.pt")
