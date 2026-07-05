@@ -72,11 +72,11 @@ def parse_model_with_custom_modules(d, ch, verbose=True):
             c2 = c1
 
         elif m is BasicBlock:
-            # BasicBlock: c1, c2 (اختیاری)
+            # BasicBlock: c1 از ورودی گرفته می‌شود، c2 از args[0] (اختیاری)
             c1 = ch[f]
             c2_ = args[0] if args else c1
             c2_ = make_divisible(min(c2_, max_channels) * width, 8)
-            args = [c1, c2_] + args[1:]
+            args = [c1, c2_] + args[1:]   # shortcut پیش‌فرض True است
             c2 = c2_
 
         # ---- بقیه ماژول‌ها (همان منطق Ultralytics) ----
