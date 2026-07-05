@@ -1,5 +1,5 @@
 # src/models/modules/__init__.py
 from .msca import MSCA
+from .afpn import ASFF2, ASFF3, BasicBlock
 
-# وقتی afpn.py تکمیل شد:
-# from .afpn import CB, BasicBlock, ASFF2, ASFF3
+__all__ = ["MSCA", "ASFF2", "ASFF3", "BasicBlock"]
