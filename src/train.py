@@ -14,7 +14,7 @@ from ultralytics import YOLO
 # import نسبی: این خط باعث اجرای src/models/__init__.py می‌شود
 # که ماژول‌های سفارشی (MSCA) را در Ultralytics ثبت می‌کند
 from . import models  # noqa: F401
-
+from .utils.nms import enable_soft_nms
 
 def load_config(exp_config_path):
     with open('configs/base_config.yaml', 'r') as f:
@@ -32,7 +32,12 @@ def main():
     args = parser.parse_args()
 
     cfg = load_config(args.config)
-
+    if cfg.get('soft_nms', False):
+    enable_soft_nms(
+        method=cfg.get('soft_nms_method', 'gaussian'),
+        sigma=cfg.get('soft_nms_sigma', 0.5),
+        score_thres=cfg.get('soft_nms_score_thres', 0.001),
+    )
     if 'model_yaml' in cfg:
         model = YOLO(cfg['model_yaml'])
         model.load(cfg['weights'])
