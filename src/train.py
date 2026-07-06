@@ -32,6 +32,12 @@ def main():
     args = parser.parse_args()
 
     cfg = load_config(args.config)
+    if cfg.get('wiou', False):
+        enable_wiou(
+            delta=cfg.get('wiou_delta', 3.0),
+            alpha=cfg.get('wiou_alpha', 1.9),
+            momentum=cfg.get('wiou_momentum', 0.9999),
+        )
     if cfg.get('soft_nms', False):
         enable_soft_nms(
             method=cfg.get('soft_nms_method', 'gaussian'),
