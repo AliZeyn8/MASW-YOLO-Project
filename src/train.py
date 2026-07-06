@@ -33,11 +33,11 @@ def main():
 
     cfg = load_config(args.config)
     if cfg.get('soft_nms', False):
-    enable_soft_nms(
-        method=cfg.get('soft_nms_method', 'gaussian'),
-        sigma=cfg.get('soft_nms_sigma', 0.5),
-        score_thres=cfg.get('soft_nms_score_thres', 0.001),
-    )
+        enable_soft_nms(
+            method=cfg.get('soft_nms_method', 'gaussian'),
+            sigma=cfg.get('soft_nms_sigma', 0.5),
+            score_thres=cfg.get('soft_nms_score_thres', 0.001),
+        )
     if 'model_yaml' in cfg:
         model = YOLO(cfg['model_yaml'])
         model.load(cfg['weights'])
