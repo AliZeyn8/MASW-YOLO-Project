@@ -31,7 +31,6 @@ ultralytics.utils.loss.BboxLoss کپی شده (فقط بخش محاسبهٔ iou/
     print(inspect.getsource(l.BboxLoss))
 و با این فایل مقایسه کنید.
 """
-
 import math
 import torch
 import torch.nn as nn
@@ -156,4 +155,4 @@ def disable_wiou():
     """بازگرداندن CIoU/BboxLoss استاندارد Ultralytics (در صورت نیاز به مقایسه در همان اجرا)."""
     import importlib
     importlib.reload(_ultra_loss)
-    LOGGER.info("↩️ BboxLoss استاندارد Ultralytics بازگردانده شد.")tra_loss)
+    LOGGER.info("↩️ BboxLoss استاندارد Ultralytics بازگردانده شد.")
