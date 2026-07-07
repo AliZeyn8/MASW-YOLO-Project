@@ -32,17 +32,22 @@ def main():
     args = parser.parse_args()
 
     cfg = load_config(args.config)
-    if cfg.get('wiou', False):
-        enable_wiou(
-            delta=cfg.get('wiou_delta', 3.0),
-            alpha=cfg.get('wiou_alpha', 1.9),
-            momentum=cfg.get('wiou_momentum', 0.9999),
-        )
+    from .utils.nms import enable_soft_nms
+from .utils.loss import enable_wiou
+
+# داخل main()، بعد از cfg = load_config(args.config)
     if cfg.get('soft_nms', False):
         enable_soft_nms(
             method=cfg.get('soft_nms_method', 'gaussian'),
             sigma=cfg.get('soft_nms_sigma', 0.5),
             score_thres=cfg.get('soft_nms_score_thres', 0.001),
+        )
+    
+    if cfg.get('wiou', False):
+        enable_wiou(
+            version=cfg.get('wiou_version', 'v3'),
+            beta=cfg.get('wiou_beta', 1.0),
+            delta=cfg.get('wiou_delta', 0.5),
         )
     if 'model_yaml' in cfg:
         model = YOLO(cfg['model_yaml'])
