@@ -45,7 +45,7 @@ mixup: 0.0
 # Model
 model: yolov8n.yaml  # base model configuration
 
-# Output / logging                              # <-- اضافه شد
-project: runs/train                              # <-- اضافه شد: پوشه‌ای که نتایج در آن ذخیره می‌شود
+  
+project: /content/drive/MyDrive/VisDrone_Project/runs/train  # <-- تغییر یافت: روی گوگل درایو
 exist_ok: true                                   # <-- اضافه شد: اگر پوشه تکراری بود بازنویسی کن
 verbose: true                                    # <-- اضافه شد: نمایش جزئیات در حین آموزش
