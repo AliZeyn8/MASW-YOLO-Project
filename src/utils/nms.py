@@ -42,6 +42,7 @@ Usage
 
 import time
 
+import numpy as np
 import torch
 
 from ultralytics.utils import LOGGER
@@ -61,7 +62,7 @@ def soft_nms(
     sigma: float = 0.5,
     score_thres: float = 0.001,
     method: str = "gaussian",
-    max_boxes: int = 1000,
+    max_boxes: int = 300,
 ) -> torch.Tensor:
     """
     Soft-NMS core, following the Fig. 4 flowchart:
@@ -101,35 +102,47 @@ def soft_nms(
         work_scores = scores.clone()
 
     m = work_boxes.shape[0]
-    iou_mat = box_iou(work_boxes, work_boxes)  # computed once, m x m
+    iou_mat = box_iou(work_boxes, work_boxes)  # computed once on GPU, m x m
 
-    active = torch.ones(m, dtype=torch.bool, device=device)
+    # The greedy "pick best -> decay -> repeat" step is inherently sequential,
+    # so it cannot be vectorized across iterations. Running it on the GPU means
+    # each iteration's argmax forces a GPU->CPU sync (a hard stall), which for
+    # m in the hundreds/low-thousands (typical at val-time conf=0.001, before
+    # NMS) can take seconds per image and blow through Ultralytics' internal
+    # per-batch time_limit -- silently truncating detections for the rest of
+    # the batch. Moving this part to NumPy on CPU avoids that: a Python loop
+    # over ~1000 scalars takes microseconds per step there.
+    iou_np = iou_mat.detach().cpu().numpy()
+    scores_np = work_scores.detach().cpu().numpy().copy()
+
+    active = np.ones(m, dtype=bool)
     keep_local = []
-    neg_inf = torch.finfo(work_scores.dtype).min
 
     for _ in range(m):
-        masked = torch.where(active, work_scores, torch.full_like(work_scores, neg_inf))
-        i = int(torch.argmax(masked))
-        if work_scores[i] <= score_thres or not active[i]:
+        remaining = np.where(active)[0]
+        if remaining.size == 0:
+            break
+        i = remaining[np.argmax(scores_np[remaining])]
+        if scores_np[i] <= score_thres:
             break
 
-        keep_local.append(i)
+        keep_local.append(int(i))
         active[i] = False
         if not active.any():
             break
 
-        ious = iou_mat[i]
+        ious = iou_np[i]
         if method == "linear":
-            decay = torch.where(ious > iou_thres, 1.0 - ious, torch.ones_like(ious))
+            decay = np.where(ious > iou_thres, 1.0 - ious, 1.0)
         elif method == "gaussian":
-            decay = torch.exp(-(ious * ious) / sigma)
+            decay = np.exp(-(ious * ious) / sigma)
         elif method == "hard":
-            decay = torch.where(ious > iou_thres, torch.zeros_like(ious), torch.ones_like(ious))
+            decay = np.where(ious > iou_thres, 0.0, 1.0)
         else:
             raise ValueError(f"Invalid Soft-NMS method: {method!r} (use 'gaussian', 'linear', or 'hard')")
 
-        work_scores = torch.where(active, work_scores * decay, work_scores)
-        active &= work_scores > score_thres
+        scores_np[active] = scores_np[active] * decay[active]
+        active &= scores_np > score_thres
 
     if not keep_local:
         return torch.zeros((0,), dtype=torch.long, device=device)
@@ -161,7 +174,7 @@ def non_max_suppression_soft(
     soft_nms_method: str = "gaussian",
     soft_nms_sigma: float = 0.5,
     soft_nms_score_thres: float = 0.001,
-    soft_nms_max_boxes: int = 1000,
+    soft_nms_max_boxes: int = 300,
 ):
     """Soft-NMS version of `non_max_suppression`; same signature/behavior as
     the Ultralytics original, with the suppression step swapped out."""
@@ -278,7 +291,7 @@ def non_max_suppression_soft(
 # Enable / disable helpers
 # --------------------------------------------------------------------------- #
 def enable_soft_nms(method: str = "gaussian", sigma: float = 0.5, score_thres: float = 0.001,
-                     max_boxes: int = 1000):
+                     max_boxes: int = 300):
     """Globally enable Soft-NMS by monkey-patching
     ultralytics.utils.nms.non_max_suppression. Only affects post-processing —
     the model graph (MSCA/AFPN/WIoU) is untouched."""
