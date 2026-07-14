@@ -68,11 +68,11 @@ def main():
         )
 
     if cfg.get('wiou', False):
-    enable_wiou(
-        alpha=cfg.get('wiou_alpha', 1.9),
-        delta=cfg.get('wiou_delta', 3.0),
-        momentum=cfg.get('wiou_momentum', 0.9999),
-    )
+        enable_wiou(
+            alpha=cfg.get('wiou_alpha', 1.9),
+            delta=cfg.get('wiou_delta', 3.0),
+            momentum=cfg.get('wiou_momentum', 0.9999),
+        )
     # ---- تشخیص چک‌پوینت قبلی برای همین آزمایش (برای Resume) ----
     checkpoint_path = os.path.join(cfg['project'], cfg['name'], 'weights', 'last.pt')
     resume = os.path.exists(checkpoint_path)
