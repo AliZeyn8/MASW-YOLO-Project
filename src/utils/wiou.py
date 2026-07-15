@@ -1,8 +1,6 @@
 """
 src/utils/wiou.py
 
-Faithful implementation of Wise-IoU v3 (Tong et al., 2023) exactly as
-described in the MASW-YOLO paper, Eqs. (6)-(12):
 
     L_CIoU = L_IoU + (x-xgt)^2+(y-ygt)^2 / (Wg^2+Hg^2) + alpha*v      (6)
     alpha  = v / (L_IoU + v)                                          (7)
@@ -12,25 +10,6 @@ described in the MASW-YOLO paper, Eqs. (6)-(12):
     R_WIoU = exp( ((x-xgt)^2+(y-ygt)^2) / (Wg^2+Hg^2) )               (11)
     r      = beta / (delta * alpha_hp^(beta-delta)),  beta = L_IoU / L_IoU_bar   (12)
 
-This file is 100% self-contained. It does NOT import or touch
-src/models/modules/afpn.py, msca.py, or src/utils/nms.py, and it does
-not modify the network graph in any way -- it only replaces the
-box-regression loss term. Consequently it cannot change Params/M or
-FLOPs/G (see Table 2: the WIoU-only row is 8.1 G / 3.01 M, identical
-to the untouched YOLOv8n baseline).
-
-Usage (drop-in, same pattern as your existing exp5_wiou.yaml):
-
-    from src.utils.wiou import enable_wiou
-    enable_wiou(alpha=1.9, delta=3.0, momentum=0.9999)
-    # must be called BEFORE model.train()/model.val() build the
-    # criterion (v8DetectionLoss), since BboxLoss is resolved by name
-    # at construction time.
-
-    ... model.train(...) ...
-
-    from src.utils.wiou import disable_wiou
-    disable_wiou()   # restores stock CIoU BboxLoss if needed
 """
 import torch
 import torch.nn as nn
@@ -180,12 +159,7 @@ from ultralytics.utils import LOGGER
 
 
 def enable_wiou(alpha: float = 1.9, delta: float = 3.0, momentum: float = 0.9999):
-    """
-    Monkey-patches ultralytics.utils.loss.BboxLoss -> WiseIoULoss.
-    Must run before model.train()/model.val() build v8DetectionLoss.
-    Independent of AFPN/MSCA/Soft-NMS: only replaces the box-loss term,
-    never touches nn.Module graph, so Params/M and FLOPs/G are unaffected.
-    """
+
     def _factory(reg_max: int = 16, *args, **kwargs):
         return WiseIoULoss(reg_max, alpha=alpha, delta=delta, momentum=momentum)
 
