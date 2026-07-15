@@ -2,10 +2,10 @@
 src/models/parsing.py
 
 نسخهٔ گسترش‌یافتهٔ parse_model اصلی Ultralytics. این فایل تقریباً عیناً
-همان منطق تابع ultralytics.nn.tasks.parse_model (نسخهٔ نصب‌شده هنگام
-نوشتن این کد) است، با این تفاوت که سه شاخهٔ اضافه برای MSCA، ASFF2 و
-ASFF3 دارد. تمام ماژول‌های استاندارد دیگر (Conv, C2f, SPPF, Concat,
-Detect, و ...) دقیقاً همان مسیر اصلی Ultralytics را طی می‌کنند.
+همان منطق تابع ultralytics.nn.tasks.parse_model است، با این تفاوت که
+شاخه‌های اضافه برای MSCA، ASFF2، ASFF3، و اکنون AFPN و Index دارد.
+تمام ماژول‌های استاندارد دیگر (Conv, C2f, SPPF, Concat, Detect, و ...)
+دقیقاً همان مسیر اصلی Ultralytics را طی می‌کنند.
 
 ⚠️ توجه به نسخه: اگر بعد از آپدیت ultralytics در کولب باز هم خطای
 عجیب گرفتید (مخصوصاً دربارهٔ آرگومان‌های Detect/reg_max/end2end)،
@@ -25,21 +25,28 @@ from ultralytics.utils import LOGGER
 from ultralytics.utils.ops import make_divisible
 
 from .modules.msca import MSCA
-from .modules.afpn import ASFF2, ASFF3
+from .modules.afpn import ASFF2, ASFF3, ASFF4, AFPN, Index
 
-_MULTI_INPUT_MODULES = {"ASFF2": ASFF2, "ASFF3": ASFF3}
-_CUSTOM_MODULES = {"MSCA": MSCA, "ASFF2": ASFF2, "ASFF3": ASFF3}
+_MULTI_INPUT_MODULES = {"ASFF2": ASFF2, "ASFF3": ASFF3, "ASFF4": ASFF4, "AFPN": AFPN}
+_CUSTOM_MODULES = {
+    "MSCA": MSCA,
+    "ASFF2": ASFF2,
+    "ASFF3": ASFF3,
+    "ASFF4": ASFF4,
+    "AFPN": AFPN,
+    "Index": Index,
+}
 
 
 def uses_custom_multi_input(d: dict) -> bool:
-    """آیا این کانفیگ yaml حداقل یک لایه ASFF2/ASFF3 دارد؟"""
+    """آیا این کانفیگ yaml حداقل یک لایه ASFF2/ASFF3/ASFF4/AFPN دارد؟"""
     layer_defs = d.get("backbone", []) + d.get("head", [])
-    return any(layer[2] in _MULTI_INPUT_MODULES for layer in layer_defs)
+    return any(layer[2] in _MULTI_INPUT_MODULES or layer[2] == "Index" for layer in layer_defs)
 
 
 def parse_model_with_custom_modules(d: dict, ch, verbose: bool = True):
     """
-    جایگزین parse_model اصلی، فقط برای yaml هایی که ASFF2/ASFF3 دارند
+    جایگزین parse_model اصلی، فقط برای yaml هایی که ماژول‌های سفارشی دارند
     (توسط wrapper در __init__.py قبل از فراخوانی چک می‌شود).
     برای ماژول‌های غیر سفارشی، همان مسیر ultralytics.nn.tasks.parse_model
     استفاده می‌شود تا رفتار همیشه با نسخهٔ نصب‌شده هماهنگ بماند.
@@ -87,12 +94,26 @@ def parse_model_with_custom_modules(d: dict, ch, verbose: bool = True):
         n = n_ = max(round(n * depth), 1) if n > 1 else n
 
         # ============== شاخه‌های سفارشی ما ==============
-        if m in (ASFF2, ASFF3):
+        if m in (ASFF2, ASFF3, ASFF4):
             c_out_raw, level = args[0], (args[1] if len(args) > 1 else 0)
             c_out = make_divisible(min(c_out_raw, max_channels) * width, 8)
             in_channels = [ch[x] for x in f]
             args = [*in_channels, c_out, level]
             c2 = c_out
+
+        elif m is AFPN:
+            # yaml: [[c2_idx, c3_idx, c4_idx, c5_idx], 1, AFPN, [width]]
+            width_raw = args[0]
+            w = make_divisible(min(width_raw, max_channels) * width, 8)
+            in_channels = [ch[x] for x in f]  # [c2,c3,c4,c5]
+            args = [w, *in_channels]
+            c2 = w  # هر چهار خروجی (P2..P5) هم‌کانال با عرض w هستند
+
+        elif m is Index:
+            # yaml: [afpn_layer_idx, 1, Index, [i]]   i در {0,1,2,3} = P2..P5
+            idx = args[0]
+            args = [idx]
+            c2 = ch[f]  # کانال بدون تغییر باقی می‌ماند (فقط انتخاب عضو لیست)
 
         elif m is MSCA:
             c1 = ch[f]
