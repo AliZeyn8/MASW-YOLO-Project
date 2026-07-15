@@ -1,9 +1,5 @@
-"""
-src/models/modules/msca.py
 
-پیاده‌سازی Multi-Scale Convolutional Attention (MSCA)
-منطبق بر معادلات (1) و (2) و شکل ۲ مقاله MASW-YOLO
-"""
+#src/models/modules/msca.py
 
 import torch
 import torch.nn as nn
