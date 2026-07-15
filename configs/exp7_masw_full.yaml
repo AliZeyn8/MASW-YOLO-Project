@@ -1,10 +1,5 @@
 # configs/exp7_masw_full.yaml
-#
-# ترکیب کامل: MSCA + AFPN + Soft-NMS + WIoU  (سطر آخر جدول 2 مقاله).
-# هم soft_nms و هم wiou به‌صورت مستقل و هم‌زمان از طریق monkey-patch در
-# train.py فعال می‌شوند (enable_soft_nms + enable_wiou)، بدون نیاز به
-# کلاس Trainer/Validator جداگانه — پس ترکیب هر دو در یک کانفیگ کاملاً
-# امن است.
+
 
 name: exp7_masw_full
 model_yaml: src/models/masw-yolo-afpn.yaml
